@@ -12,19 +12,17 @@ const pusher = new Pusher({
   cluster: process.env.PUSHER_CLUSTER,
   useTLS: true,
 });
-export async function GetUser(chatId, payload) {
+export async function sendScheduleMessage(chatId, payload) {
   try {
     if (!chatId) return;
-    await pusher.trigger(
-      `private-message-${chatId}`,
-      "client-message",
-      payload
-    );
 
-    await Message.findOneAndUpdate(
-      { customId: payload.customId },
-      { isScheduled: true }
-    );
+    await Promise.all([
+      pusher.trigger(`private-message-${chatId}`, "client-message", payload),
+      Message.findOneAndUpdate(
+        { customId: payload.customId },
+        { isSchedule: false }
+      ),
+    ]);
   } catch (error) {
     console.log(error);
   }
